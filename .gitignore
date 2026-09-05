@@ -9,5 +9,8 @@ Thumbs.db
 node_modules/
 .vscode/
 .idea/
-u105592622_*.sql
+
+# Database dumps and install script
+install.php
+*.sql
 *.sql.bak
