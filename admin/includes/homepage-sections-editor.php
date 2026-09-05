@@ -164,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['section_editor_submit
 
                 // Synchronized Master Toggle for 7 Dev Services from Section 03
                 if (isset($_POST['home_sec3c_master_toggle_present'])) {
-                    Setting::set('home_sec3c_enabled', isset($_POST['home_sec3c_enabled']) ? '1' : '0');
+                    Setting::set('home_sec3c_enabled', (!empty($_POST['home_sec3c_enabled']) && $_POST['home_sec3c_enabled'] !== '0') ? '1' : '0');
                 }
             }
         }
@@ -190,7 +190,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['section_editor_submit
             }
 
             if (!$editorError) {
-                Setting::set('home_sec3c_enabled', isset($_POST['home_sec3c_enabled']) ? '1' : '0');
+                Setting::set('home_sec3c_enabled', (!empty($_POST['home_sec3c_enabled']) && $_POST['home_sec3c_enabled'] !== '0') ? '1' : '0');
                 Setting::set('home_sec3c_label', trim($_POST['home_sec3c_label'] ?? ''));
                 Setting::set('home_sec3c_title', trim($_POST['home_sec3c_title'] ?? ''));
                 Setting::set('home_sec3c_desc', trim($_POST['home_sec3c_desc'] ?? ''));
@@ -817,6 +817,222 @@ function updateHeroModeCards(radio) {
   <?php endforeach; ?>
 </div>
 
+<!-- Master Switch Toggle Styles & Instant AJAX Controller -->
+<style>
+@keyframes wdrSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.wdr-toggle-widget {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: #FFFFFF;
+  padding: 6px 16px 6px 12px;
+  border-radius: 50px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  user-select: none;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.wdr-toggle-widget:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.1) !important;
+}
+.wdr-toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 56px;
+  height: 30px;
+  margin: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.wdr-toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+.wdr-toggle-track {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  border-radius: 34px;
+  cursor: pointer;
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s ease;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);
+}
+.wdr-toggle-knob {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 22px;
+  height: 22px;
+  background-color: #FFFFFF;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.wdr-master-switch-card {
+  transition: background-color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+}
+.wdr-master-switch-card .wdr-status-badge {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+.wdr-master-switch-card .wdr-icon-box {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+</style>
+<script>
+function handleWdrToggleClick(widget) {
+  const cb = widget.querySelector('.wdr-sec3c-toggle-input');
+  if (cb) {
+    cb.checked = !cb.checked;
+    handleWdrToggleChange(cb.checked);
+  }
+}
+
+async function handleWdrToggleChange(isChecked) {
+  applyWdrToggleUI(isChecked);
+  
+  document.querySelectorAll('.wdr-toggle-spinner').forEach(el => el.style.display = 'inline-block');
+
+  try {
+    const csrfInput = document.querySelector('input[name="csrf_token"]');
+    const csrfToken = csrfInput ? csrfInput.value : '';
+
+    const formData = new FormData();
+    formData.append('ajax_action', 'toggle_sec3c');
+    formData.append('state', isChecked ? '1' : '0');
+    formData.append('csrf_token', csrfToken);
+
+    const response = await fetch(window.location.href, {
+      method: 'POST',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: formData
+    });
+
+    const data = await response.json();
+    if (data && data.success) {
+      showWdrToast(
+        isChecked 
+          ? '⚡ Master Switch is ON! 7 Dev Services are now active across the website.' 
+          : '○ Master Switch is OFF! 7 Dev Services are hidden across the website.',
+        'success'
+      );
+    } else {
+      throw new Error((data && data.error) ? data.error : 'Failed to update switch');
+    }
+  } catch (err) {
+    console.error('Toggle Error:', err);
+    applyWdrToggleUI(!isChecked);
+    showWdrToast('Error saving switch: ' + err.message, 'error');
+  } finally {
+    document.querySelectorAll('.wdr-toggle-spinner').forEach(el => el.style.display = 'none');
+  }
+}
+
+function applyWdrToggleUI(isActive) {
+  document.querySelectorAll('.wdr-sec3c-toggle-input').forEach(cb => cb.checked = isActive);
+  document.querySelectorAll('.wdr-sec3c-hidden-val').forEach(input => input.value = isActive ? '1' : '0');
+
+  document.querySelectorAll('.wdr-toggle-track').forEach(track => {
+    track.style.backgroundColor = isActive ? '#10B981' : '#CBD5E1';
+  });
+  document.querySelectorAll('.wdr-toggle-knob').forEach(knob => {
+    knob.style.transform = isActive ? 'translateX(26px)' : 'translateX(0px)';
+  });
+  document.querySelectorAll('.wdr-toggle-knob-icon').forEach(icon => {
+    icon.className = 'wdr-toggle-knob-icon ' + (isActive ? 'ri-check-line' : 'ri-close-line');
+    icon.style.color = isActive ? '#10B981' : '#94A3B8';
+  });
+
+  document.querySelectorAll('.wdr-toggle-widget').forEach(widget => {
+    widget.style.borderColor = isActive ? '#86EFAC' : '#FECACA';
+  });
+  document.querySelectorAll('.wdr-toggle-label-val').forEach(lbl => {
+    lbl.textContent = isActive ? 'ON' : 'OFF';
+    lbl.style.color = isActive ? '#166534' : '#991B1B';
+  });
+
+  document.querySelectorAll('.wdr-master-switch-card').forEach(card => {
+    card.style.background = isActive ? '#F0FDF4' : '#FEF2F2';
+    card.style.borderColor = isActive ? '#86EFAC' : '#FECACA';
+  });
+
+  document.querySelectorAll('.wdr-master-switch-card .wdr-icon-box').forEach(box => {
+    box.style.background = isActive ? '#DCFCE7' : '#FEE2E2';
+    box.style.color = isActive ? '#166534' : '#991B1B';
+    const icon = box.querySelector('i');
+    if (icon) {
+      icon.className = isActive ? 'ri-shield-check-fill' : 'ri-eye-off-fill';
+    }
+  });
+
+  const isSec03 = document.getElementById('wdr_sec3_banner');
+  if (isSec03) {
+    const badge = isSec03.querySelector('.wdr-status-badge');
+    if (badge) {
+      badge.textContent = isActive ? '● LIVE & ACTIVE' : '○ HIDDEN ACROSS SITE';
+      badge.style.background = isActive ? '#166534' : '#991B1B';
+    }
+    const desc = isSec03.querySelector('.wdr-status-desc');
+    if (desc) {
+      desc.textContent = isActive 
+        ? 'Visible in Navbar (2-column), Homepage Section 3C, Services Page, and Service Detail pages.' 
+        : 'Turned OFF: Navbar has reverted to original 1-column layout, and all 7 dev services are completely hidden across the site.';
+    }
+  }
+
+  const isSec03c = document.getElementById('wdr_sec3c_banner');
+  if (isSec03c) {
+    const badge = isSec03c.querySelector('.wdr-status-badge');
+    if (badge) {
+      badge.textContent = isActive ? '● ACTIVE (SHOWN ACROSS SITE)' : '○ DISABLED (HIDDEN ACROSS SITE)';
+      badge.style.background = isActive ? '#166534' : '#991B1B';
+    }
+    const desc = isSec03c.querySelector('.wdr-status-desc');
+    if (desc) {
+      desc.innerHTML = isActive 
+        ? '<strong>Status: LIVE.</strong> These 7 services are visible in Navbar (2 columns), Homepage Section 3C bento, Services page matrix, and their detail pages are active.' 
+        : '<strong>Status: HIDDEN.</strong> All 7 development services are completely hidden across the entire website. Navbar has reverted to its original 1-column layout, and detail page links redirect.';
+    }
+  }
+}
+
+function showWdrToast(msg, type = 'success') {
+  let toast = document.getElementById('wdr_live_toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'wdr_live_toast';
+    toast.style.cssText = 'position: fixed; bottom: 28px; right: 28px; z-index: 999999; display: flex; align-items: center; gap: 12px; padding: 14px 22px; border-radius: 12px; font-weight: 700; font-size: 13.5px; box-shadow: 0 12px 30px rgba(0,0,0,0.2); transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); opacity: 0; transform: translateY(20px); pointer-events: none;';
+    document.body.appendChild(toast);
+  }
+  
+  const isOk = (type === 'success');
+  toast.style.background = isOk ? '#0F172A' : (type === 'info' ? '#1E293B' : '#991B1B');
+  toast.style.color = '#FFFFFF';
+  toast.style.border = isOk ? '1.5px solid #10B981' : (type === 'info' ? '1.5px solid #38BDF8' : '1.5px solid #EF4444');
+  toast.innerHTML = `<i class="${isOk ? 'ri-checkbox-circle-fill' : (type === 'info' ? 'ri-loader-4-line' : 'ri-error-warning-fill')}" style="font-size: 20px; color: ${isOk ? '#34D399' : (type === 'info' ? '#38BDF8' : '#FCA5A5')};"></i> <span>${msg}</span>`;
+  
+  toast.style.opacity = '1';
+  toast.style.transform = 'translateY(0)';
+  
+  clearTimeout(window._wdrToastTimeout);
+  if (type !== 'info') {
+    window._wdrToastTimeout = setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateY(20px)';
+    }, 2800);
+  }
+}
+</script>
+
 
 <!-- ═══════════════════════════════════════════
      TAB 01: HERO SECTION & SLIDES
@@ -1118,30 +1334,49 @@ function updateHeroModeCards(radio) {
     <!-- Master Toggle Banner for 7 New Services (Section 03C) -->
     <?php $sec3cActive = setting('home_sec3c_enabled', '1') !== '0'; ?>
     <input type="hidden" name="home_sec3c_master_toggle_present" value="1">
-    <div style="background: <?= $sec3cActive ? '#F0FDF4' : '#FEF2F2' ?>; border: 1.5px solid <?= $sec3cActive ? '#86EFAC' : '#FECACA' ?>; border-radius: 14px; padding: 16px 20px; margin: 12px 0 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+    <input type="hidden" name="home_sec3c_enabled" class="wdr-sec3c-hidden-val" value="<?= $sec3cActive ? '1' : '0' ?>">
+
+    <div class="wdr-master-switch-card" id="wdr_sec3_banner" style="background: <?= $sec3cActive ? '#F0FDF4' : '#FEF2F2' ?>; border: 1.5px solid <?= $sec3cActive ? '#86EFAC' : '#FECACA' ?>; border-radius: 14px; padding: 16px 20px; margin: 12px 0 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
       <div style="display: flex; align-items: center; gap: 14px;">
-        <div style="width: 42px; height: 42px; border-radius: 10px; background: <?= $sec3cActive ? '#DCFCE7' : '#FEE2E2' ?>; color: <?= $sec3cActive ? '#166534' : '#991B1B' ?>; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">
+        <div class="wdr-icon-box" style="width: 42px; height: 42px; border-radius: 10px; background: <?= $sec3cActive ? '#DCFCE7' : '#FEE2E2' ?>; color: <?= $sec3cActive ? '#166534' : '#991B1B' ?>; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">
           <i class="<?= $sec3cActive ? 'ri-shield-check-fill' : 'ri-eye-off-fill' ?>"></i>
         </div>
         <div>
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <span style="font-weight: 800; font-size: 14px; color: var(--wdr-navy);">7 Other / Development Services (Section 03C)</span>
-            <span style="display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; background: <?= $sec3cActive ? '#166534' : '#991B1B' ?>; color: #FFF;">
+            <span class="wdr-status-badge" style="display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; background: <?= $sec3cActive ? '#166534' : '#991B1B' ?>; color: #FFF;">
               <?= $sec3cActive ? '● LIVE &amp; ACTIVE' : '○ HIDDEN ACROSS SITE' ?>
             </span>
           </div>
-          <p style="margin: 3px 0 0; font-size: 12.5px; color: var(--admin-muted);">
+          <p class="wdr-status-desc" style="margin: 3px 0 0; font-size: 12.5px; color: var(--admin-muted);">
             <?= $sec3cActive 
                 ? 'Visible in Navbar (2-column), Homepage Section 3C, Services Page, and Service Detail pages.' 
                 : 'Turned OFF: Navbar has reverted to original 1-column layout, and all 7 dev services are completely hidden across the site.' ?>
           </p>
         </div>
       </div>
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <label style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--wdr-navy); cursor: pointer; background: #FFF; padding: 8px 16px; border-radius: 8px; border: 1.5px solid <?= $sec3cActive ? '#86EFAC' : '#FECACA' ?>; box-shadow: 0 2px 6px rgba(0,0,0,0.04); user-select: none;">
-          <input type="checkbox" name="home_sec3c_enabled" value="1" <?= $sec3cActive ? 'checked' : '' ?> style="accent-color: var(--wdr-teal); width: 18px; height: 18px; cursor: pointer;">
-          <span><?= $sec3cActive ? 'Master Switch: ON' : 'Master Switch: OFF' ?></span>
-        </label>
+      <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+        <!-- Animated iOS Toggle Switch -->
+        <div class="wdr-toggle-widget" onclick="handleWdrToggleClick(this)" style="border: 1.5px solid <?= $sec3cActive ? '#86EFAC' : '#FECACA' ?>;">
+          <label class="wdr-toggle-switch" onclick="event.stopPropagation()">
+            <input type="checkbox" class="wdr-sec3c-toggle-input" <?= $sec3cActive ? 'checked' : '' ?> onchange="handleWdrToggleChange(this.checked)">
+            <span class="wdr-toggle-track" style="background-color: <?= $sec3cActive ? '#10B981' : '#CBD5E1' ?>;">
+              <span class="wdr-toggle-knob" style="transform: <?= $sec3cActive ? 'translateX(26px)' : 'translateX(0px)' ?>;">
+                <i class="wdr-toggle-knob-icon <?= $sec3cActive ? 'ri-check-line' : 'ri-close-line' ?>" style="font-size: 13px; font-weight: 900; color: <?= $sec3cActive ? '#10B981' : '#94A3B8' ?>;"></i>
+              </span>
+            </span>
+          </label>
+          <div style="display: flex; flex-direction: column; cursor: pointer;">
+            <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--admin-muted); line-height: 1;">Master Switch</span>
+            <span class="wdr-toggle-label-val" style="font-size: 13.5px; font-weight: 800; color: <?= $sec3cActive ? '#166534' : '#991B1B' ?>; line-height: 1.2;">
+              <?= $sec3cActive ? 'ON' : 'OFF' ?>
+            </span>
+          </div>
+          <span class="wdr-toggle-spinner" style="display: none; font-size: 15px; color: var(--wdr-teal); animation: wdrSpin 0.8s linear infinite;">
+            <i class="ri-loader-4-line"></i>
+          </span>
+        </div>
+
         <a href="<?= $currentUrl ?>?tab=sec03c" class="btn-adm btn-adm-outline btn-adm-sm" style="font-size: 12px; padding: 7px 12px; text-decoration: none;">
           Edit 03C Bento →
         </a>
@@ -1278,29 +1513,49 @@ function updateHeroModeCards(radio) {
 
     <!-- Master Switch Card for 7 Development & Design Services -->
     <?php $sec3cActive = setting('home_sec3c_enabled', '1') !== '0'; ?>
-    <div style="background: <?= $sec3cActive ? '#F0FDF4' : '#FEF2F2' ?>; border: 1.5px solid <?= $sec3cActive ? '#86EFAC' : '#FECACA' ?>; border-radius: 14px; padding: 18px 22px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
+    <input type="hidden" name="home_sec3c_master_toggle_present" value="1">
+    <input type="hidden" name="home_sec3c_enabled" class="wdr-sec3c-hidden-val" value="<?= $sec3cActive ? '1' : '0' ?>">
+
+    <div class="wdr-master-switch-card" id="wdr_sec3c_banner" style="background: <?= $sec3cActive ? '#F0FDF4' : '#FEF2F2' ?>; border: 1.5px solid <?= $sec3cActive ? '#86EFAC' : '#FECACA' ?>; border-radius: 14px; padding: 18px 22px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
       <div style="display: flex; align-items: center; gap: 14px;">
-        <div style="width: 46px; height: 46px; border-radius: 12px; background: <?= $sec3cActive ? '#DCFCE7' : '#FEE2E2' ?>; color: <?= $sec3cActive ? '#166534' : '#991B1B' ?>; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+        <div class="wdr-icon-box" style="width: 46px; height: 46px; border-radius: 12px; background: <?= $sec3cActive ? '#DCFCE7' : '#FEE2E2' ?>; color: <?= $sec3cActive ? '#166534' : '#991B1B' ?>; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
           <i class="<?= $sec3cActive ? 'ri-shield-check-fill' : 'ri-eye-off-fill' ?>"></i>
         </div>
         <div>
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--wdr-navy);">⚡ Master Toggle: 7 Other / Development &amp; Design Services</h4>
-            <span style="display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; background: <?= $sec3cActive ? '#166534' : '#991B1B' ?>; color: #FFF;">
+            <span class="wdr-status-badge" style="display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; background: <?= $sec3cActive ? '#166534' : '#991B1B' ?>; color: #FFF;">
               <?= $sec3cActive ? '● ACTIVE (SHOWN ACROSS SITE)' : '○ DISABLED (HIDDEN ACROSS SITE)' ?>
             </span>
           </div>
-          <p style="margin: 4px 0 0; font-size: 12.8px; color: var(--admin-muted); line-height: 1.5;">
+          <p class="wdr-status-desc" style="margin: 4px 0 0; font-size: 12.8px; color: var(--admin-muted); line-height: 1.5;">
             <?= $sec3cActive 
                 ? '<strong>Status: LIVE.</strong> These 7 services are visible in Navbar (2 columns), Homepage Section 3C bento, Services page matrix, and their detail pages are active.' 
                 : '<strong>Status: HIDDEN.</strong> All 7 development services are completely hidden across the entire website. Navbar has reverted to its original 1-column layout, and detail page links redirect.' ?>
           </p>
         </div>
       </div>
-      <label style="display: inline-flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; color: var(--wdr-navy); cursor: pointer; background: #FFF; padding: 10px 20px; border-radius: 10px; border: 1.5px solid <?= $sec3cActive ? '#86EFAC' : '#FECACA' ?>; box-shadow: 0 2px 8px rgba(0,0,0,0.05); user-select: none;">
-        <input type="checkbox" name="home_sec3c_enabled" value="1" <?= $sec3cActive ? 'checked' : '' ?> style="accent-color: var(--wdr-teal); width: 20px; height: 20px; cursor: pointer;">
-        <span><?= $sec3cActive ? 'Master Switch: ON' : 'Master Switch: OFF' ?></span>
-      </label>
+
+      <!-- Animated iOS Toggle Switch -->
+      <div class="wdr-toggle-widget" onclick="handleWdrToggleClick(this)" style="border: 1.5px solid <?= $sec3cActive ? '#86EFAC' : '#FECACA' ?>; padding: 8px 20px 8px 14px;">
+        <label class="wdr-toggle-switch" onclick="event.stopPropagation()">
+          <input type="checkbox" class="wdr-sec3c-toggle-input" <?= $sec3cActive ? 'checked' : '' ?> onchange="handleWdrToggleChange(this.checked)">
+          <span class="wdr-toggle-track" style="background-color: <?= $sec3cActive ? '#10B981' : '#CBD5E1' ?>;">
+            <span class="wdr-toggle-knob" style="transform: <?= $sec3cActive ? 'translateX(26px)' : 'translateX(0px)' ?>;">
+              <i class="wdr-toggle-knob-icon <?= $sec3cActive ? 'ri-check-line' : 'ri-close-line' ?>" style="font-size: 13px; font-weight: 900; color: <?= $sec3cActive ? '#10B981' : '#94A3B8' ?>;"></i>
+            </span>
+          </span>
+        </label>
+        <div style="display: flex; flex-direction: column; cursor: pointer;">
+          <span style="font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--admin-muted); line-height: 1;">Master Switch</span>
+          <span class="wdr-toggle-label-val" style="font-size: 14px; font-weight: 800; color: <?= $sec3cActive ? '#166534' : '#991B1B' ?>; line-height: 1.2;">
+            <?= $sec3cActive ? 'ON' : 'OFF' ?>
+          </span>
+        </div>
+        <span class="wdr-toggle-spinner" style="display: none; font-size: 16px; color: var(--wdr-teal); animation: wdrSpin 0.8s linear infinite;">
+          <i class="ri-loader-4-line"></i>
+        </span>
+      </div>
     </div>
     
     <!-- Section Header Controls -->
