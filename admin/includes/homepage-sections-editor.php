@@ -877,7 +877,37 @@ function updateHeroModeCards(radio) {
   justify-content: center;
 }
 .wdr-master-switch-card {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 20px !important;
+  flex-wrap: nowrap !important;
   transition: background-color 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+}
+.wdr-switch-text-col {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+.wdr-switch-action-col {
+  flex-shrink: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin-left: auto !important;
+}
+@media (max-width: 860px) {
+  .wdr-master-switch-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+  }
+  .wdr-switch-action-col {
+    width: 100% !important;
+    justify-content: flex-start !important;
+    margin-left: 0 !important;
+    padding-top: 10px !important;
+    border-top: 1px dashed rgba(0,0,0,0.08) !important;
+  }
 }
 .wdr-master-switch-card .wdr-status-badge {
   transition: background-color 0.3s ease, color 0.3s ease;
@@ -984,8 +1014,8 @@ function applyWdrToggleUI(isActive) {
     const desc = isSec03.querySelector('.wdr-status-desc');
     if (desc) {
       desc.textContent = isActive 
-        ? 'Visible in Navbar (2-column), Homepage Section 3C, Services Page, and Service Detail pages.' 
-        : 'Turned OFF: Navbar has reverted to original 1-column layout, and all 7 dev services are completely hidden across the site.';
+        ? 'Visible across Navbar, Homepage Section 3C, Services Page, and Service Detail pages.' 
+        : 'Hidden across Navbar, Homepage Section 3C, Services Page, and Service Detail pages.';
     }
   }
 
@@ -999,8 +1029,8 @@ function applyWdrToggleUI(isActive) {
     const desc = isSec03c.querySelector('.wdr-status-desc');
     if (desc) {
       desc.innerHTML = isActive 
-        ? '<strong>Status: LIVE.</strong> These 7 services are visible in Navbar (2 columns), Homepage Section 3C bento, Services page matrix, and their detail pages are active.' 
-        : '<strong>Status: HIDDEN.</strong> All 7 development services are completely hidden across the entire website. Navbar has reverted to its original 1-column layout, and detail page links redirect.';
+        ? '<strong>Status: LIVE.</strong> Visible in Navbar, Homepage Section 3C, Services page, and detail pages.' 
+        : '<strong>Status: HIDDEN.</strong> Hidden across Navbar, Homepage Section 3C, Services page, and detail pages.';
     }
   }
 }
@@ -1336,26 +1366,26 @@ function showWdrToast(msg, type = 'success') {
     <input type="hidden" name="home_sec3c_master_toggle_present" value="1">
     <input type="hidden" name="home_sec3c_enabled" class="wdr-sec3c-hidden-val" value="<?= $sec3cActive ? '1' : '0' ?>">
 
-    <div class="wdr-master-switch-card" id="wdr_sec3_banner" style="background: <?= $sec3cActive ? '#F0FDF4' : '#FEF2F2' ?>; border: 1.5px solid <?= $sec3cActive ? '#86EFAC' : '#FECACA' ?>; border-radius: 14px; padding: 16px 20px; margin: 12px 0 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
-      <div style="display: flex; align-items: center; gap: 14px;">
+    <div class="wdr-master-switch-card" id="wdr_sec3_banner" style="background: <?= $sec3cActive ? '#F0FDF4' : '#FEF2F2' ?>; border: 1.5px solid <?= $sec3cActive ? '#86EFAC' : '#FECACA' ?>; border-radius: 14px; padding: 16px 20px; margin: 12px 0 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+      <div style="display: flex; align-items: center; gap: 14px; flex: 1 1 auto; min-width: 0;">
         <div class="wdr-icon-box" style="width: 42px; height: 42px; border-radius: 10px; background: <?= $sec3cActive ? '#DCFCE7' : '#FEE2E2' ?>; color: <?= $sec3cActive ? '#166534' : '#991B1B' ?>; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">
           <i class="<?= $sec3cActive ? 'ri-shield-check-fill' : 'ri-eye-off-fill' ?>"></i>
         </div>
-        <div>
+        <div class="wdr-switch-text-col" style="flex: 1 1 auto; min-width: 0;">
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <span style="font-weight: 800; font-size: 14px; color: var(--wdr-navy);">7 Other / Development Services (Section 03C)</span>
             <span class="wdr-status-badge" style="display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; background: <?= $sec3cActive ? '#166534' : '#991B1B' ?>; color: #FFF;">
               <?= $sec3cActive ? '● LIVE &amp; ACTIVE' : '○ HIDDEN ACROSS SITE' ?>
             </span>
           </div>
-          <p class="wdr-status-desc" style="margin: 3px 0 0; font-size: 12.5px; color: var(--admin-muted);">
+          <p class="wdr-status-desc" style="margin: 3px 0 0; font-size: 12.5px; color: var(--admin-muted); line-height: 1.4;">
             <?= $sec3cActive 
-                ? 'Visible in Navbar (2-column), Homepage Section 3C, Services Page, and Service Detail pages.' 
-                : 'Turned OFF: Navbar has reverted to original 1-column layout, and all 7 dev services are completely hidden across the site.' ?>
+                ? 'Visible across Navbar, Homepage Section 3C, Services Page, and Service Detail pages.' 
+                : 'Hidden across Navbar, Homepage Section 3C, Services Page, and Service Detail pages.' ?>
           </p>
         </div>
       </div>
-      <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+      <div class="wdr-switch-action-col">
         <!-- Animated iOS Toggle Switch -->
         <div class="wdr-toggle-widget" onclick="handleWdrToggleClick(this)" style="border: 1.5px solid <?= $sec3cActive ? '#86EFAC' : '#FECACA' ?>;">
           <label class="wdr-toggle-switch" onclick="event.stopPropagation()">
@@ -1377,7 +1407,7 @@ function showWdrToast(msg, type = 'success') {
           </span>
         </div>
 
-        <a href="<?= $currentUrl ?>?tab=sec03c" class="btn-adm btn-adm-outline btn-adm-sm" style="font-size: 12px; padding: 7px 12px; text-decoration: none;">
+        <a href="<?= $currentUrl ?>?tab=sec03c" class="btn-adm btn-adm-outline btn-adm-sm" style="font-size: 12px; padding: 7px 12px; text-decoration: none; white-space: nowrap;">
           Edit 03C Bento →
         </a>
       </div>
@@ -1516,45 +1546,47 @@ function showWdrToast(msg, type = 'success') {
     <input type="hidden" name="home_sec3c_master_toggle_present" value="1">
     <input type="hidden" name="home_sec3c_enabled" class="wdr-sec3c-hidden-val" value="<?= $sec3cActive ? '1' : '0' ?>">
 
-    <div class="wdr-master-switch-card" id="wdr_sec3c_banner" style="background: <?= $sec3cActive ? '#F0FDF4' : '#FEF2F2' ?>; border: 1.5px solid <?= $sec3cActive ? '#86EFAC' : '#FECACA' ?>; border-radius: 14px; padding: 18px 22px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
-      <div style="display: flex; align-items: center; gap: 14px;">
+    <div class="wdr-master-switch-card" id="wdr_sec3c_banner" style="background: <?= $sec3cActive ? '#F0FDF4' : '#FEF2F2' ?>; border: 1.5px solid <?= $sec3cActive ? '#86EFAC' : '#FECACA' ?>; border-radius: 14px; padding: 18px 22px; margin-bottom: 24px; box-shadow: 0 4px 14px rgba(0,0,0,0.03);">
+      <div style="display: flex; align-items: center; gap: 14px; flex: 1 1 auto; min-width: 0;">
         <div class="wdr-icon-box" style="width: 46px; height: 46px; border-radius: 12px; background: <?= $sec3cActive ? '#DCFCE7' : '#FEE2E2' ?>; color: <?= $sec3cActive ? '#166534' : '#991B1B' ?>; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
           <i class="<?= $sec3cActive ? 'ri-shield-check-fill' : 'ri-eye-off-fill' ?>"></i>
         </div>
-        <div>
+        <div class="wdr-switch-text-col" style="flex: 1 1 auto; min-width: 0;">
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <h4 style="margin: 0; font-size: 15px; font-weight: 800; color: var(--wdr-navy);">⚡ Master Toggle: 7 Other / Development &amp; Design Services</h4>
             <span class="wdr-status-badge" style="display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; background: <?= $sec3cActive ? '#166534' : '#991B1B' ?>; color: #FFF;">
               <?= $sec3cActive ? '● ACTIVE (SHOWN ACROSS SITE)' : '○ DISABLED (HIDDEN ACROSS SITE)' ?>
             </span>
           </div>
-          <p class="wdr-status-desc" style="margin: 4px 0 0; font-size: 12.8px; color: var(--admin-muted); line-height: 1.5;">
+          <p class="wdr-status-desc" style="margin: 4px 0 0; font-size: 12.8px; color: var(--admin-muted); line-height: 1.4;">
             <?= $sec3cActive 
-                ? '<strong>Status: LIVE.</strong> These 7 services are visible in Navbar (2 columns), Homepage Section 3C bento, Services page matrix, and their detail pages are active.' 
-                : '<strong>Status: HIDDEN.</strong> All 7 development services are completely hidden across the entire website. Navbar has reverted to its original 1-column layout, and detail page links redirect.' ?>
+                ? '<strong>Status: LIVE.</strong> Visible in Navbar, Homepage Section 3C, Services page, and detail pages.' 
+                : '<strong>Status: HIDDEN.</strong> Hidden across Navbar, Homepage Section 3C, Services page, and detail pages.' ?>
           </p>
         </div>
       </div>
 
-      <!-- Animated iOS Toggle Switch -->
-      <div class="wdr-toggle-widget" onclick="handleWdrToggleClick(this)" style="border: 1.5px solid <?= $sec3cActive ? '#86EFAC' : '#FECACA' ?>; padding: 8px 20px 8px 14px;">
-        <label class="wdr-toggle-switch" onclick="event.stopPropagation()">
-          <input type="checkbox" class="wdr-sec3c-toggle-input" <?= $sec3cActive ? 'checked' : '' ?> onchange="handleWdrToggleChange(this.checked)">
-          <span class="wdr-toggle-track" style="background-color: <?= $sec3cActive ? '#10B981' : '#CBD5E1' ?>;">
-            <span class="wdr-toggle-knob" style="transform: <?= $sec3cActive ? 'translateX(26px)' : 'translateX(0px)' ?>;">
-              <i class="wdr-toggle-knob-icon <?= $sec3cActive ? 'ri-check-line' : 'ri-close-line' ?>" style="font-size: 13px; font-weight: 900; color: <?= $sec3cActive ? '#10B981' : '#94A3B8' ?>;"></i>
+      <div class="wdr-switch-action-col">
+        <!-- Animated iOS Toggle Switch -->
+        <div class="wdr-toggle-widget" onclick="handleWdrToggleClick(this)" style="border: 1.5px solid <?= $sec3cActive ? '#86EFAC' : '#FECACA' ?>; padding: 8px 20px 8px 14px;">
+          <label class="wdr-toggle-switch" onclick="event.stopPropagation()">
+            <input type="checkbox" class="wdr-sec3c-toggle-input" <?= $sec3cActive ? 'checked' : '' ?> onchange="handleWdrToggleChange(this.checked)">
+            <span class="wdr-toggle-track" style="background-color: <?= $sec3cActive ? '#10B981' : '#CBD5E1' ?>;">
+              <span class="wdr-toggle-knob" style="transform: <?= $sec3cActive ? 'translateX(26px)' : 'translateX(0px)' ?>;">
+                <i class="wdr-toggle-knob-icon <?= $sec3cActive ? 'ri-check-line' : 'ri-close-line' ?>" style="font-size: 13px; font-weight: 900; color: <?= $sec3cActive ? '#10B981' : '#94A3B8' ?>;"></i>
+              </span>
             </span>
-          </span>
-        </label>
-        <div style="display: flex; flex-direction: column; cursor: pointer;">
-          <span style="font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--admin-muted); line-height: 1;">Master Switch</span>
-          <span class="wdr-toggle-label-val" style="font-size: 14px; font-weight: 800; color: <?= $sec3cActive ? '#166534' : '#991B1B' ?>; line-height: 1.2;">
-            <?= $sec3cActive ? 'ON' : 'OFF' ?>
+          </label>
+          <div style="display: flex; flex-direction: column; cursor: pointer;">
+            <span style="font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--admin-muted); line-height: 1;">Master Switch</span>
+            <span class="wdr-toggle-label-val" style="font-size: 14px; font-weight: 800; color: <?= $sec3cActive ? '#166534' : '#991B1B' ?>; line-height: 1.2;">
+              <?= $sec3cActive ? 'ON' : 'OFF' ?>
+            </span>
+          </div>
+          <span class="wdr-toggle-spinner" style="display: none; font-size: 16px; color: var(--wdr-teal); animation: wdrSpin 0.8s linear infinite;">
+            <i class="ri-loader-4-line"></i>
           </span>
         </div>
-        <span class="wdr-toggle-spinner" style="display: none; font-size: 16px; color: var(--wdr-teal); animation: wdrSpin 0.8s linear infinite;">
-          <i class="ri-loader-4-line"></i>
-        </span>
       </div>
     </div>
     
