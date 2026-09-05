@@ -1,0 +1,13 @@
+# Local environment & config
+uploads/temp/
+uploads/mail_logs/
+uploads/mail_queue/
+uploads/resumes/
+*.log
+.DS_Store
+Thumbs.db
+node_modules/
+.vscode/
+.idea/
+u105592622_*.sql
+*.sql.bak

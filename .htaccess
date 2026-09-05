@@ -1,0 +1,74 @@
+Options -Indexes
+RewriteEngine On
+DirectoryIndex index.php public/index.php
+
+# Block direct access to private backend directories
+RewriteRule ^(config|core|models|views|vendor)(/|$) - [F,L]
+
+# 1. Handle index.php request -> redirect cleanly to directory root
+RewriteCond %{THE_REQUEST} \s/+(?:.*?/)?(?:public/)?index\.php(?:[?\s]|$) [NC]
+RewriteCond %{REQUEST_URI} !^/(?:.*?/)?admin [NC]
+RewriteRule ^(?:index\.php|public/index\.php)?$ ./ [R=301,L]
+
+# 2. 301 Redirect: strip .php extension from browser requests (excluding admin, install, api, service-detail, case-study-detail)
+RewriteCond %{THE_REQUEST} \s/+(?:.*?/)?(?:public/)?([^/?]+)\.php(?:[?\s]|$) [NC]
+RewriteCond %{REQUEST_URI} !^/(?:.*?/)?admin [NC]
+RewriteCond %{REQUEST_URI} !^/(?:.*?/)?install\.php [NC]
+RewriteCond %{REQUEST_URI} !^/(?:.*?/)?api [NC]
+RewriteCond %{REQUEST_URI} !^/(?:.*?/)?service-detail\.php [NC]
+RewriteCond %{REQUEST_URI} !^/(?:.*?/)?case-study-detail\.php [NC]
+RewriteRule ^ %1 [R=301,L]
+
+# 3. Direct access to existing static files / assets / uploads / admin
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# 4. Core Page Routes
+RewriteRule ^blog/?$ public/blog/index.php [L,QSA]
+RewriteRule ^blog/([a-zA-Z0-9\-]+)/?$ public/blog/post.php?slug=$1 [L,QSA]
+RewriteRule ^services/?$ public/services.php [L,QSA]
+RewriteRule ^service/([a-zA-Z0-9\-]+)/?$ public/service-detail.php?slug=$1 [L,QSA]
+RewriteRule ^services/([a-zA-Z0-9\-]+)/?$ public/service-detail.php?slug=$1 [L,QSA]
+RewriteRule ^case-studies/?$ public/case-studies.php [L,QSA]
+RewriteRule ^case-study/([a-zA-Z0-9\-]+)/?$ public/case-study-detail.php?slug=$1 [L,QSA]
+RewriteRule ^careers/?$ public/careers.php [L,QSA]
+RewriteRule ^career/([a-zA-Z0-9\-]+)/?$ public/job-detail.php?slug=$1 [L,QSA]
+RewriteRule ^contact/?$ public/contact.php [L,QSA]
+RewriteRule ^who-we-are/?$ public/who-we-are.php [L,QSA]
+
+# 5. Extensionless Page Fallback in public/
+RewriteCond %{DOCUMENT_ROOT}%{REQUEST_URI}.php -f [OR]
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^([^/]+)/?$ public/$1.php [L,QSA]
+
+# 6. Direct Root Blog Slug Fallback
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/(?:.*?/)?(?:admin|assets|img|uploads|public|api) [NC]
+RewriteRule ^([a-zA-Z0-9\-]+)/?$ public/blog/post.php?slug=$1 [L,QSA]
+
+# 7. Delegate root requests to public/index.php
+RewriteRule ^$ public/index.php [L]
+RewriteRule ^404/?$ public/404.php [L,QSA]
+RewriteRule ^((?!public/|admin/|assets/|img/|uploads/).*)$ public/$1 [L]
+
+# 8. Custom 404 Error Document
+ErrorDocument 404 /public/404.php
+
+# 8. Upload Limits (50MB)
+<IfModule mod_php.c>
+  php_value upload_max_filesize 50M
+  php_value post_max_size 55M
+  php_value memory_limit 128M
+</IfModule>
+<IfModule mod_php7.c>
+  php_value upload_max_filesize 50M
+  php_value post_max_size 55M
+  php_value memory_limit 128M
+</IfModule>
+<IfModule mod_php8.c>
+  php_value upload_max_filesize 50M
+  php_value post_max_size 55M
+  php_value memory_limit 128M
+</IfModule>

@@ -1,0 +1,13 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /config/
+Disallow: /core/
+Disallow: /models/
+Disallow: /views/
+Disallow: /vendor/
+Disallow: /scratch/
+Disallow: /install.php
+Disallow: /api/
+Allow: /
+
+Sitemap: https://wordora.in/sitemap.xml
